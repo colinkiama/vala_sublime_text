@@ -41,12 +41,14 @@ variables:
   visibility: \b(?:public|private|protected|internal)\b
   ownership: \b(?:unowned|owned|weak)\b
   base_type: (?:(?:bool|char|uchar|short|ushort|unichar|double|float|int|int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|long|ulong|size_t|ssize_t|object|string|void)\b)
-  type_suffix: (?:\s*(?:\[,*\]|\*|\?)*)
+  # `\?(?!\?)`: valascanner lexes `??` as the null-coalescing operator, so a
+  # type never ends in `??` (`o as Foo<T>??d`, issue #15)
+  type_suffix: (?:\s*(?:\[,*\]|\*|\?(?!\?))*)
   generic_declaration: \s*(<[^(={};]*>)?\s*
 
   brackets_capture: '((\[)(,*)(\]))'
   array_length_capture: '((\[)(\d+)(:)({{base_type}}|{{name}})(\]))'
-  type_suffix_capture: '(\?)?{{brackets_capture}}?(?:\s*(\*))?'
+  type_suffix_capture: '(\?(?!\?))?{{brackets_capture}}?(?:\s*(\*))?'
 
   # Keywords from Vala.Scanner (valascanner.vala)
   reserved: '(?:abstract|as|async|base|break|case|catch|class|const|construct|continue|default|delegate|delete|do|dynamic|else|ensures|enum|errordomain|extern|false|finally|for|foreach|get|if|in|inline|interface|internal|is|lock|namespace|new|null|out|override|owned|params|partial|private|protected|public|ref|requires|return|sealed|set|signal|sizeof|static|struct|switch|this|throw|throws|true|try|typeof|unowned|unlock|using|var|virtual|void|volatile|weak|while|with|yield)'
@@ -2301,7 +2303,10 @@ contexts:
         1: punctuation.accessor.dot.namespace.vala
     - match: '\*'
       scope: keyword.operator.pointer.vala
-    - match: \s*(\?)
+    # `??` is never part of a type: it is the null-coalescing operator, as in
+    # `x as T ?? fallback` (issue #15). Without the `(?!\?)` both characters
+    # were read as nullable markers.
+    - match: \s*(\?)(?!\?)
       captures:
         1: storage.type.nullable.vala
     - match: \s*(<)
@@ -2313,7 +2318,7 @@ contexts:
         1: support.type.vala
         2: punctuation.accessor.dot.namespace.vala
         3: constant.other.errordomain.vala
-    - match: (?=[]})>,;>:]|=>)
+    - match: (?=[]})>,;>:]|=>|\?\?)
       pop: true
 
   type_common:

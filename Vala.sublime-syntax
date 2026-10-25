@@ -1415,6 +1415,12 @@ contexts:
         1: keyword.control.other.unlock.vala
         2: meta.group.vala punctuation.section.group.begin.vala
       set: [expression_block, line_of_code]
+    # parse_with_statement: `with (expr)` or `with (Type name = expr)`
+    - match: \b(with)\s*(\()
+      captures:
+        1: keyword.control.other.with.vala
+        2: meta.group.vala punctuation.section.group.begin.vala
+      set: [expression_block, line_of_code]
     - match: \bdo\b
       scope: keyword.control.do.vala
       set: [do_condition, while_block]
